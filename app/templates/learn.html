@@ -41,6 +41,28 @@
   const SVG_X = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   const SVG_INFO = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
 
+  // Riigi Teataja canonical URLs for the two acts the exam draws from.
+  // Anchors land on the act top; user can ctrl-F to the section. Stable
+  // per-section anchors would be ideal but Riigi Teataja's HTML uses
+  // dynamic IDs that have changed before, so top-of-act is the safe link.
+  const ACT_URLS = {
+    "PS":   "https://www.riigiteataja.ee/akt/115052015002",
+    "KodS": "https://www.riigiteataja.ee/akt/710566",
+  };
+  function renderRefLinks(ref) {
+    if (!ref) return "";
+    // Split on commas or semicolons; each piece like "PS §1" or "KodS §13"
+    return ref.split(/[,;]\s*/).map((piece) => {
+      const m = piece.trim().match(/^(PS|KodS)\s*(.*)$/);
+      if (!m) return escapeHtml(piece);
+      const act = m[1];
+      const tail = m[2];
+      const url = ACT_URLS[act];
+      if (!url) return escapeHtml(piece);
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="ref-link">${escapeHtml(act + " " + tail)}</a>`;
+    }).join(", ");
+  }
+
   function hydrate(card) {
     if (card.dataset.hydrated === "1") return;
     card.dataset.hydrated = "1";
@@ -70,7 +92,7 @@
       <p class="q-text q-text-et">${escapeHtml(qEt)}</p>
       <div class="q-hint" hidden>
         <p class="q-text-en"><strong>EN.</strong> ${escapeHtml(qEn)}</p>
-        <p class="q-ref"><strong>Ref.</strong> ${escapeHtml(ref)}</p>
+        <p class="q-ref"><strong>Ref.</strong> ${renderRefLinks(ref)}</p>
       </div>
       <ul class="opts">${optsHtml}</ul>
       <div class="q-actions">

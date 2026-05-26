@@ -1,4 +1,4 @@
-/* kodakondsuseksam - mobile-first, dark by default, ~8KB budget. */
+/* kodakondsuseksam - mobile-first, dark by default. Estonian flag palette. */
 :root {
   --bg: #0d1116;
   --surface: #161b22;
@@ -6,14 +6,20 @@
   --border: #2d333b;
   --text: #e6edf3;
   --text-dim: #9aa4af;
-  --accent: #3b82f6;
-  --accent-2: #60a5fa;
+  /* Estonian flag blue (official #0072CE), with a lighter step for hovers
+     and links. Replaces the generic Tailwind blue so the brand identity is
+     Estonian-themed end to end. */
+  --accent: #0072CE;
+  --accent-2: #3a9bf0;
+  --accent-ink: #ffffff;
+  /* Estonian flag black, used as the hover-toggle target for primary CTAs. */
+  --accent-flip: #000000;
   --success: #16a34a;
   --success-bg: rgba(22, 163, 74, 0.14);
   --danger: #ef4444;
   --danger-bg: rgba(239, 68, 68, 0.14);
   --warn: #f59e0b;
-  --focus: #93c5fd;
+  --focus: #3a9bf0;
   --radius: 10px;
   --radius-lg: 14px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px rgba(0, 0, 0, 0.25);
@@ -145,30 +151,43 @@ input, select, textarea { font: inherit; font-size: 16px; color: inherit; }
   letter-spacing: -0.02em;
   padding: 6px 4px; border-radius: 8px;
 }
+.brand:hover { text-decoration: none; }
 .brand-mark { color: var(--accent-2); display: inline-flex; align-items: center; }
 .brand-mark svg { width: 36px; height: 36px; }
+/* Wordmark: keep the blue accent on "koda" (BK confirmed it works) and
+   let the rest be plain text. The flag SVG to the left already carries
+   the full tri-colour identity; doing it twice in the wordmark too made
+   the white pill on "kond" read as a sticker / tag, not a flag stripe. */
+.brand-text { display: inline-flex; align-items: center; }
+.brand-text .flag-blue  { color: #0072CE; }
+.brand-text .flag-mid   { color: var(--text); }
+.brand-text .flag-white { color: var(--text); }
 .topnav-links {
   margin-left: auto; display: flex; align-items: center; gap: 4px;
 }
+/* Top nav links: same outlined-button style as the CTAs but in a smaller
+   size so they sit naturally in the bar. All three buttons (Avaleht, Õpi,
+   Eksam) look and behave IDENTICALLY: outlined default, fill-with-blue +
+   white text on hover. No special active-page treatment. */
 .topnav-links a {
-  color: var(--text); padding: 10px 14px; border-radius: 8px;
-  min-height: 44px; display: inline-flex; align-items: center; gap: 4px;
-  font-size: 15px; font-weight: 500;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  transition: background 0.12s ease, border-color 0.12s ease, transform 0.06s ease;
+  color: var(--text); padding: 8px 14px; border-radius: 10px;
+  min-height: 40px; display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-display);
+  font-size: 14px; font-weight: 700;
+  letter-spacing: -0.005em;
+  background: transparent;
+  border: 2px solid var(--border);
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 80ms ease;
 }
 .topnav-links a:hover {
-  background: var(--surface-2);
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
   text-decoration: none;
+  transform: translateY(-1px);
 }
-.topnav-links a:active { transform: translateY(1px); }
-.topnav-links a[aria-current="page"] {
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
-  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
-  color: var(--text);
-}
+.topnav-links a:active { transform: translateY(0); }
+.topnav-links a:hover .nav-sub { color: rgba(255, 255, 255, 0.85); }
 .nav-sub { color: var(--text-dim); font-size: 11px; margin-left: 4px; }
 .theme-toggle {
   background: transparent; border: 1px solid var(--border);
@@ -193,10 +212,19 @@ main {
 }
 
 .page-head h1 { font-size: 24px; margin: 4px 0 6px; }
-.page-head-en, .hero-en, .feature-en, .page-lede-en, .about-en, .btn-sub, .result-headline-en {
+.page-head-en, .hero-en, .feature-en, .page-lede-en, .about-en, .result-headline-en {
   color: var(--text-dim); font-weight: 400; font-size: 0.85em;
   display: inline; margin-left: 4px;
 }
+/* Per-button sub-label: brighter than the generic text-dim so the
+   English caption stays readable against both blue primary and dark
+   secondary backgrounds. */
+.btn-sub {
+  font-weight: 500; font-size: 0.78em; display: inline; margin-left: 6px;
+  letter-spacing: 0.005em;
+}
+.btn-primary .btn-sub { color: rgba(255, 255, 255, 0.85); }
+.btn-secondary .btn-sub, .btn-ghost .btn-sub { color: var(--text-dim); }
 .page-lede { color: var(--text-dim); margin-top: 0; }
 
 /* Hero */
@@ -250,20 +278,60 @@ main {
 /* Buttons */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  gap: 6px; min-height: 44px; padding: 10px 16px;
-  border-radius: 10px; border: 1px solid transparent;
-  font-weight: 600; font-size: 15px; cursor: pointer;
+  gap: 6px; min-height: 44px; padding: 12px 18px;
+  border-radius: 12px; border: 1px solid transparent;
+  font-family: var(--font-display);
+  font-weight: 700; font-size: 16px;
+  letter-spacing: -0.005em;
+  cursor: pointer;
   background: var(--surface-2); color: var(--text);
-  text-decoration: none; transition: transform 80ms ease, background 120ms ease;
+  text-decoration: none;
+  transition: background 160ms ease, color 160ms ease,
+              border-color 160ms ease, box-shadow 160ms ease,
+              transform 80ms ease;
 }
 .btn:hover { text-decoration: none; }
-.btn:active { transform: scale(0.98); }
+.btn:active { transform: translateY(1px) scale(0.99); }
+.btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: var(--accent-2); }
-.btn-secondary { background: var(--surface); border-color: var(--border); }
-.btn-ghost { background: transparent; border-color: var(--border); }
-.btn-lg { font-size: 17px; padding: 14px 20px; min-height: 52px; }
+
+/* Primary + Secondary: identical default state (white text on a neutral
+   outline), identical hover toggle (fill with Estonian blue, white text
+   stays). The two buttons differ only in semantic role, not in pre-hover
+   colour, per the maintainer's instruction. */
+.btn-primary,
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--border);
+  box-shadow: none;
+}
+.btn-primary:hover,
+.btn-secondary:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px rgba(0, 114, 206, 0.28);
+  transform: translateY(-1px);
+}
+.btn-primary:active,
+.btn-secondary:active {
+  transform: translateY(0);
+  background: color-mix(in srgb, var(--accent) 85%, #000);
+}
+.btn-primary .btn-sub,
+.btn-secondary .btn-sub { color: var(--text-dim); }
+.btn-primary:hover .btn-sub,
+.btn-secondary:hover .btn-sub { color: rgba(255, 255, 255, 0.85); }
+
+/* Ghost: text-button look, hover paints a soft surface backdrop */
+.btn-ghost { background: transparent; border: 1px solid transparent; }
+.btn-ghost:hover { background: var(--surface-2); border-color: var(--border); }
+
+.btn-lg {
+  font-size: 18px; padding: 16px 22px; min-height: 56px;
+  border-radius: 14px;
+}
 
 /* Cards */
 .card {
@@ -293,6 +361,11 @@ footer {
 .q-text-et { font-weight: 600; }
 .q-text-en { color: var(--text-dim); font-size: 14px; }
 .q-ref { color: var(--text-dim); font-size: 13px; margin: 8px 0 0; }
+.q-ref .ref-link {
+  color: var(--accent-2); font-weight: 600; text-decoration: underline;
+  text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
+.q-ref .ref-link:hover { color: var(--accent); }
 .q-hint {
   background: var(--surface-2); border-radius: 8px;
   padding: 10px 12px; margin: 10px 0; border: 1px solid var(--border);

@@ -1,7 +1,7 @@
 {
-  "name": "kodakondsuseksam",
-  "short_name": "kodakond",
-  "description": "Estonian citizenship exam study tool",
+  "name": "Saa kodanikuks",
+  "short_name": "Saa kodanikuks",
+  "description": "Saa kodanikuks. Free study tool for the Estonian citizenship exam (kodakondsuseksam).",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

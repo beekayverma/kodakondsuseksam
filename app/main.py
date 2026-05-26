@@ -31,6 +31,20 @@ MOCK_PASS_THRESHOLD = 18
 QUESTIONS: list[dict] = json.loads(QUESTIONS_PATH.read_text(encoding="utf-8"))
 QUESTIONS_BY_ID: dict[str, dict] = {q["id"]: q for q in QUESTIONS}
 
+# Static-file cache buster: appended as ?v=... to static URLs in templates
+# so any edit to style.css / app.js automatically invalidates the SW cache
+# without requiring a manual DevTools wipe. mtime of the largest asset
+# dominates so we don't need to track each file individually.
+def _compute_static_version() -> str:
+    try:
+        files = [STATIC_DIR / "style.css", STATIC_DIR / "app.js", STATIC_DIR / "sw.js"]
+        mtimes = [int(f.stat().st_mtime) for f in files if f.exists()]
+        return str(max(mtimes)) if mtimes else "0"
+    except OSError:
+        return "0"
+
+STATIC_VERSION = _compute_static_version()
+
 # Server-held mock sessions keyed by an opaque token. Per-process only,
 # resets on restart; fine for a single-Pi deployment. v2 moves this to
 # IndexedDB on the client when we add the no-server mock path.
