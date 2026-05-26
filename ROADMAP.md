@@ -13,12 +13,25 @@
 
 Ship a complete usable tool for English-speaking citizenship candidates.
 
+- Level 0 (Lugemine / Read): clean searchable view of the three
+  official reference documents that exam candidates are entitled to
+  consult: the Constitution of the Republic of Estonia (PS), the
+  Citizenship Act (KodS), and the Innove "6 Steps to Acquiring
+  Estonian Citizenship" booklet. Each article and section is
+  deep-linkable so a question's `ref` (e.g. `PS §1`) becomes a tap
+  that jumps to the underlying text. Hint language toggle works
+  here too (EN, then RU, UA, HI in later phases) but the source
+  text always stays in Estonian because that is the language of
+  the law.
 - Level 1 (Õpi / Learn) page with toggle to show English hint,
-  statute reference, plain-language explanation
+  statute reference, plain-language explanation, and a "Loe (Read)"
+  link that jumps to Level 0 at the cited statute
 - Level 2 (Eksam / Mock) preserved from v0, polished
 - Personal Tutor wired to a populated RAG store (Constitution +
-  Citizenship Act ingested into hp-lab pgvector)
-- PWA manifest + service worker for offline play
+  Citizenship Act ingested into hp-lab pgvector). Same ingest also
+  powers Level 0's full-text search and the question `ref` deep-links.
+- PWA manifest + service worker for offline play (Level 0 docs
+  cached for full offline reading)
 - Spaced repetition: missed questions resurface at 1d, 3d, 7d, 14d,
   30d intervals, all client-side
 - Score history chart (last 30 mock attempts)

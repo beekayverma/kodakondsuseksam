@@ -17,7 +17,12 @@ and Russian only.
 2. Installable PWA, offline-capable
 3. Hint layer in more languages (EN first, then RU, UA, HI, FI, DE...)
 4. Spaced-repetition resurfacing
-5. Two-level structure (Õpi vs. Eksam) modelled on real exam format
+5. Three-level structure (Lugemine / Õpi / Eksam): Level 0 is a
+   browsable copy of the three official reference documents that
+   candidates are entitled to use in the real exam room (Constitution,
+   Citizenship Act, Innove "6 Steps" booklet), with deep-linking from
+   every question's statute reference. Level 1 is study-with-hints.
+   Level 2 is the real-exam mock.
 6. AI Tutor that explains wrong answers grounded in the actual
    Constitution and Citizenship Act text via RAG
 
@@ -69,6 +74,13 @@ and Russian only.
 - **Static questions** over a database: questions live in git, every
   change is a PR, history is the audit log. Contributors do not need
   to know SQL.
+- **Reference documents bundled** (Constitution, Citizenship Act,
+  Innove "6 Steps" booklet): Estonian state acts published in Riigi
+  Teataja are public; the Innove booklet is published openly. All
+  three ship in the repo as canonical Markdown so Level 0 works
+  fully offline and the same corpus also powers the RAG store.
+  When the Riigikogu amends the law, a quarterly diff job flags the
+  change for re-import.
 - **Local Ollama** over OpenAI/Anthropic: zero per-request cost is
   the only way a non-profit tool can offer AI tutoring at scale. Quality
   is "good enough" with mistral 7B for this task because RAG over the
