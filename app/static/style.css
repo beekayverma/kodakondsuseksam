@@ -275,6 +275,88 @@ main {
 }
 .about-strip a { margin-left: 6px; }
 
+/* Lugemine (Level 0) styles */
+.lugemine-grid {
+  display: grid; gap: 16px; margin: 32px 0;
+  grid-template-columns: 1fr;
+}
+.lugemine-card {
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.lugemine-card h3 { margin: 0; font-size: 19px; line-height: 1.3; }
+.lugemine-card h3 a { color: var(--text); text-decoration: none; }
+.lugemine-card h3 a:hover { color: var(--accent-2); text-decoration: underline; }
+.lugemine-card-en { margin: 0; color: var(--text-dim); font-size: 13px; font-style: italic; }
+.lugemine-blurb { margin: 6px 0 0; color: var(--text); font-size: 15px; line-height: 1.5; }
+.lugemine-source { margin: 8px 0 0; font-size: 13px; color: var(--text-dim); }
+.lugemine-source-label { color: var(--text-dim); margin-right: 4px; }
+.lugemine-source a, .lugemine-source-row a { color: var(--accent-2); }
+.lugemine-source-row { margin: 6px 0 18px; font-size: 14px; }
+.lugemine-note {
+  margin: 32px 0 24px; padding: 18px 20px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  font-size: 15px; line-height: 1.55;
+}
+.lugemine-note-en { display: block; color: var(--text-dim); font-style: italic; margin-top: 6px; font-size: 13px; }
+.lugemine-crumb { margin: 0 0 12px; font-size: 14px; }
+.lugemine-crumb a { color: var(--accent-2); }
+
+.lugemine-doc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  margin: 24px 0;
+  line-height: 1.7;
+  font-size: 16px;
+}
+.lugemine-doc h1, .lugemine-doc h2, .lugemine-doc h3 {
+  margin: 24px 0 10px; line-height: 1.3;
+}
+.lugemine-doc h1 { font-size: 26px; }
+.lugemine-doc h2 { font-size: 22px; color: var(--accent-2); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.lugemine-doc h3 { font-size: 18px; }
+.lugemine-doc p { margin: 12px 0; }
+.lugemine-doc strong { color: var(--text); font-weight: 700; }
+.lugemine-doc ol, .lugemine-doc ul { margin: 12px 0; padding-left: 24px; }
+.lugemine-doc li { margin: 6px 0; }
+.lugemine-doc .plain-text {
+  white-space: pre-wrap; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 13px; line-height: 1.55; color: var(--text);
+  background: var(--bg); padding: 14px; border-radius: 8px;
+  border: 1px solid var(--border); overflow-x: auto;
+}
+
+.lugemine-other {
+  margin: 36px 0 24px; padding-top: 20px; border-top: 1px solid var(--border);
+}
+.lugemine-other h3 { margin: 0 0 10px; font-size: 16px; color: var(--text-dim); font-weight: 600; }
+.lugemine-other ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.lugemine-other a {
+  display: inline-block; padding: 8px 12px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-size: 14px;
+}
+.lugemine-other a:hover {
+  background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+  text-decoration: none;
+}
+
+@media (min-width: 600px) {
+  .lugemine-grid { grid-template-columns: 1fr 1fr; gap: 18px; }
+  .lugemine-card h3 { font-size: 20px; }
+  .lugemine-doc { padding: 36px 32px; font-size: 17px; }
+  .lugemine-doc h1 { font-size: 30px; }
+  .lugemine-doc h2 { font-size: 24px; }
+}
+
 /* Buttons */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;

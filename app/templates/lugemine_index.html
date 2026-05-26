@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Lugemine - Saa kodanikuks{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Lugemine
+    <span class="page-head-en">(Reading)</span>
+  </h1>
+  <p class="page-lede">
+    Need on dokumendid, mida tohib eksamiruumis kasutada. Põhiseaduse ja kodakondsuse seaduse terviktekst eesti keeles, lisaks Harno juhend ja ametlik küsimustepank.
+    <span class="page-lede-en">These are the documents the real exam candidate is entitled to consult in the exam room. Full Estonian text of the Constitution and the Citizenship Act, plus the Harno briefing and the official question bank.</span>
+  </p>
+</section>
+
+<section class="lugemine-grid" aria-labelledby="lugemine-grid-title">
+  <h2 id="lugemine-grid-title" class="visually-hidden">Viiteallikad (References)</h2>
+  {% for d in docs %}
+  <article class="lugemine-card">
+    <h3>
+      <a href="/lugemine/{{ d.slug }}">{{ d.title }}</a>
+    </h3>
+    <p class="lugemine-card-en">{{ d.title_en }}</p>
+    <p class="lugemine-blurb">{{ d.blurb }}</p>
+    <p class="lugemine-source">
+      <span class="lugemine-source-label">Allikas (Source):</span>
+      <a href="{{ d.source }}" target="_blank" rel="noopener noreferrer">Riigi Teataja / Harno</a>
+    </p>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="lugemine-note">
+  <p>
+    Soovituslik järjekord: alusta Harno juhendist (vaata formaati ja reegleid), siis loe põhiseadust ja kodakondsuse seadust. Lõpuks vaata küsimustepanka, et saada aimu, mida päris eksamil küsitakse.
+    <span class="lugemine-note-en">Recommended order: start with the Harno guide (format and rules), then read the Constitution and the Citizenship Act. Finally browse the question bank to see what the real exam asks.</span>
+  </p>
+</section>
+{% endblock %}

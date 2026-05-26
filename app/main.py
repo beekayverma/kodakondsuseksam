@@ -9,6 +9,7 @@ import secrets
 from pathlib import Path
 
 import httpx
+import markdown as md_lib
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,6 +20,64 @@ ROOT = Path(__file__).resolve().parent.parent
 QUESTIONS_PATH = ROOT / "questions.json"
 TEMPLATES_DIR = ROOT / "app" / "templates"
 STATIC_DIR = ROOT / "app" / "static"
+CORPUS_DIR = ROOT / "corpus"
+
+# Level 0 (Lugemine) catalog: reference documents the real exam candidate
+# is entitled to consult. Order, title, and short description are rendered
+# on the /lugemine index. Files live in corpus/ and are also mirrored into
+# the hp-lab Obsidian vault so the same content powers the Personal Tutor
+# RAG. Source URLs cite Riigi Teataja or Harno verbatim.
+LUGEMINE_DOCS: list[dict] = [
+    {
+        "slug": "pohiseadus",
+        "file": "pohiseadus.md",
+        "title": "Eesti Vabariigi põhiseadus",
+        "title_en": "Constitution of the Republic of Estonia",
+        "source": "https://www.riigiteataja.ee/akt/115052015002",
+        "blurb": (
+            "Põhiseaduse terviktekst. Eksamil küsitakse I, II ja III peatüki "
+            "sisu kohta. (Constitution full text. The exam covers Chapters "
+            "I, II and III.)"
+        ),
+    },
+    {
+        "slug": "kodakondsuse-seadus",
+        "file": "kodakondsuse-seadus.md",
+        "title": "Kodakondsuse seadus (KodS)",
+        "title_en": "Citizenship Act",
+        "source": "https://www.riigiteataja.ee/akt/710566",
+        "blurb": (
+            "Kodakondsuse omandamise, saamise, taastamise ja kaotamise "
+            "tingimused ning kord. (Acquisition, granting, restoration, "
+            "and loss of Estonian citizenship.)"
+        ),
+    },
+    {
+        "slug": "kusimustepank",
+        "file": "riigi-teataja-akt-31893-kusimustepank.md",
+        "title": "Ametlik küsimustepank (RT akt 31893)",
+        "title_en": "Official question bank (RT act 31893)",
+        "source": "https://www.riigiteataja.ee/akt/31893",
+        "blurb": (
+            "103 ametlikku eksamiküsimust nelja jaotuse kaupa. "
+            "Päris eksamil genereeritakse iga vooru 24 küsimust just sellest "
+            "pangast. (103 official exam questions across four sections.)"
+        ),
+    },
+    {
+        "slug": "harno-booklet",
+        "file": "harno-booklet.txt",
+        "title": "Harno juhend eksamile kandideerijatele",
+        "title_en": "Harno guide for examinees",
+        "source": "https://harno.ee/sites/default/files/documents/2021-02/Kodakondsuse_eksam_ENG.pdf",
+        "blurb": (
+            "Ametlik Harno juhend: eksami formaat, hindamine, lubatud "
+            "abivahendid eksamiruumis. (Official Harno briefing: format, "
+            "grading, what you can bring into the exam room.)"
+        ),
+    },
+]
+LUGEMINE_BY_SLUG: dict[str, dict] = {d["slug"]: d for d in LUGEMINE_DOCS}
 
 # RAG endpoint config: defaults to the existing hp-lab RAG service
 # documented in [[reference_hp_lab_rag_endpoint]]. Override via env in
@@ -76,6 +135,43 @@ async def exam(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "exam.html",
         {"request": request, "pass_threshold": MOCK_PASS_THRESHOLD},
+    )
+
+
+@app.get("/lugemine", response_class=HTMLResponse)
+async def lugemine_index(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        "lugemine_index.html",
+        {"request": request, "docs": LUGEMINE_DOCS},
+    )
+
+
+@app.get("/lugemine/{slug}", response_class=HTMLResponse)
+async def lugemine_doc(request: Request, slug: str) -> HTMLResponse:
+    doc = LUGEMINE_BY_SLUG.get(slug)
+    if doc is None:
+        raise HTTPException(404, "unknown reference document")
+    path = CORPUS_DIR / doc["file"]
+    if not path.exists():
+        raise HTTPException(500, f"corpus file missing: {doc['file']}")
+    raw = path.read_text(encoding="utf-8")
+    # markdown for the .md files, plain <pre> for the .txt (Harno booklet
+    # comes from pdftotext and the line wrapping shouldn't be reflowed).
+    if doc["file"].endswith(".md"):
+        html_body = md_lib.markdown(
+            raw, extensions=["toc", "tables", "fenced_code", "attr_list"]
+        )
+    else:
+        from html import escape as html_escape
+        html_body = f"<pre class=\"plain-text\">{html_escape(raw)}</pre>"
+    return templates.TemplateResponse(
+        "lugemine_doc.html",
+        {
+            "request": request,
+            "doc": doc,
+            "html_body": html_body,
+            "all_docs": LUGEMINE_DOCS,
+        },
     )
 
 

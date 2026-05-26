@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ doc.title }} - Lugemine - Saa kodanikuks{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="lugemine-crumb">
+    <a href="/lugemine">&larr; Lugemine</a>
+  </p>
+  <h1>{{ doc.title }}
+    <span class="page-head-en">({{ doc.title_en }})</span>
+  </h1>
+  <p class="page-lede">
+    {{ doc.blurb }}
+  </p>
+  <p class="lugemine-source-row">
+    <span class="lugemine-source-label">Allikas (Source):</span>
+    <a href="{{ doc.source }}" target="_blank" rel="noopener noreferrer">{{ doc.source }}</a>
+  </p>
+</section>
+
+<article class="lugemine-doc">
+  {{ html_body | safe }}
+</article>
+
+<nav class="lugemine-other" aria-label="Teised dokumendid (Other documents)">
+  <h3>Teised viiteallikad (Other references)</h3>
+  <ul>
+    {% for d in all_docs %}
+      {% if d.slug != doc.slug %}
+        <li><a href="/lugemine/{{ d.slug }}">{{ d.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</nav>
+{% endblock %}
