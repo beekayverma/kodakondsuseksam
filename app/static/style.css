@@ -141,8 +141,9 @@ input, select, textarea { font: inherit; font-size: 16px; color: inherit; }
 .topnav-inner {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 10px 14px;
+  padding: 10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));
   display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap; row-gap: 6px;
 }
 .brand {
   display: inline-flex; align-items: center; gap: 12px;
@@ -208,7 +209,7 @@ main {
   max-width: var(--maxw);
   width: 100%;
   margin: 0 auto;
-  padding: 18px 14px 40px;
+  padding: 18px max(14px, env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
 }
 
 .page-head h1 { font-size: 24px; margin: 4px 0 6px; }
@@ -425,7 +426,8 @@ main {
 /* Footer */
 footer {
   border-top: 1px solid var(--border); background: var(--bg);
-  padding: 18px 14px; color: var(--text-dim); font-size: 13px;
+  padding: 18px max(14px, env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  color: var(--text-dim); font-size: 13px;
 }
 .footer-inner { max-width: var(--maxw); margin: 0 auto; text-align: center; }
 .footer-inner p { margin: 4px 0; }
@@ -638,6 +640,35 @@ footer {
 /* Errors */
 .exam-error { text-align: center; }
 .exam-error h2 { color: var(--danger); margin-top: 0; }
+
+/* Phone (default + explicit overrides for narrow viewports).
+   Compress the topnav so brand + 4 nav links + theme toggle fit at 360px
+   without horizontal scroll. Strategy: hide the parenthetical English
+   sub-label in the nav, tighten paddings, shrink the wordmark a touch,
+   and let topnav-inner wrap to a second row when nothing else fits. */
+@media (max-width: 599px) {
+  .brand { font-size: 18px; gap: 10px; padding: 4px 2px; }
+  .brand-mark svg { width: 28px; height: 28px; }
+  .topnav-links { gap: 6px; margin-left: auto; }
+  .topnav-links a {
+    padding: 7px 10px; font-size: 13px; min-height: 36px;
+    border-width: 1.5px; border-radius: 9px;
+  }
+  .topnav-links .nav-sub { display: none; }
+  .theme-toggle {
+    width: 36px; height: 36px; margin-left: 4px; border-radius: 9px;
+  }
+  /* Sticky exam timer sits below the topnav; topnav can grow if it wraps,
+     so anchor the timer just below the typical single-row topnav height
+     and let stacking handle the rare wrap case. */
+  .exam-timerbar { top: 52px; padding: 8px 12px; }
+  .exam-timer-value { font-size: 20px; }
+  .hero { padding: 20px 0 20px; }
+  .hero h1 { font-size: 26px; }
+  .lugemine-doc { padding: 22px 18px; font-size: 15px; }
+  .lugemine-doc h1 { font-size: 22px; }
+  .lugemine-doc h2 { font-size: 19px; }
+}
 
 /* Tablet */
 @media (min-width: 600px) {
