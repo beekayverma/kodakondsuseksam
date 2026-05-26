@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% block title %}Eksam - kodakondsuseksam{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Eksam <span class="page-head-en">(Mock exam)</span></h1>
+</section>
+
+<div id="exam-root" aria-live="polite"></div>
+
+<template id="tpl-intro">
+  <section class="card exam-intro">
+    <h2>Alusta eksamit <span class="page-head-en">(Start exam)</span></h2>
+    <p>
+      24 küsimust, 45 minutit. Lävend: __PASS__ õiget vastust. Kui aeg saab läbi, eksam esitatakse automaatselt. Vastused on lõplikud alles pärast esitamist.
+    </p>
+    <p class="muted">
+      24 questions, 45 minutes. Pass at __PASS__ correct. The exam auto-submits when time runs out. Answers are only final after you submit.
+    </p>
+    <button type="button" class="btn btn-primary btn-lg" id="btn-start">
+      Alusta eksamit <span class="btn-sub">(Start exam)</span>
+    </button>
+  </section>
+</template>
+
+<script type="module">
+  import { fetchJSON, formatMMSS } from "/static/app.js";
+
+  const PASS_THRESHOLD = {{ pass_threshold }};
+  const EXAM_SECONDS = 45 * 60;
+
+  const SVG_CHECK = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+  const SVG_X = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  const SVG_CHEV_L = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>';
+  const SVG_CHEV_R = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>';
+
+  const root = document.getElementById("exam-root");
+  const state = {
+    token: null,
+    questions: [],
+    answers: {},   // id -> idx
+    current: 0,
+    timer: null,
+    deadline: 0,
+    submitted: false,
+  };
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  function renderIntro() {
+    const tpl = document.getElementById("tpl-intro");
+    const node = tpl.content.cloneNode(true);
+    const wrap = document.createElement("div");
+    wrap.appendChild(node);
+    wrap.innerHTML = wrap.innerHTML.replaceAll("__PASS__", String(PASS_THRESHOLD));
+    root.replaceChildren(...wrap.childNodes);
+    document.getElementById("btn-start").addEventListener("click", startExam);
+  }
+
+  async function startExam() {
+    const btn = document.getElementById("btn-start");
+    btn.disabled = true;
+    btn.textContent = "Laen... (Loading...)";
+    try {
+      const data = await fetchJSON("/api/mock/start", { method: "POST" });
+      state.token = data.token;
+      state.questions = data.questions;
+      state.answers = {};
+      state.current = 0;
+      state.submitted = false;
+      state.deadline = Date.now() + EXAM_SECONDS * 1000;
+      renderExam();
+      startTimer();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = "Proovi uuesti (Try again)";
+      alert("Eksami alustamine ebaõnnestus. Kontrolli internetti. (Failed to start exam. Check your connection.)");
+    }
+  }
+
+  function renderExam() {
+    root.innerHTML = `
+      <div class="exam-shell">
+        <div class="exam-timerbar" id="timerbar" role="status" aria-live="off">
+          <span class="exam-timer-label">Aeg jäänud (Time left)</span>
+          <span class="exam-timer-value" id="timer">45:00</span>
+        </div>
+
+        <nav class="exam-palette" aria-label="Küsimuste loend (Question list)">
+          ${state.questions.map((_, i) => `
+            <button type="button" class="pal-btn" data-i="${i}" aria-label="Küsimus ${i + 1}">${i + 1}</button>
+          `).join("")}
+        </nav>
+
+        <div class="exam-stage" id="stage"></div>
+
+        <div class="exam-controls">
+          <button type="button" class="btn btn-ghost" id="btn-prev" aria-label="Eelmine küsimus (Previous)">
+            ${SVG_CHEV_L}<span>Eelmine</span>
+          </button>
+          <button type="button" class="btn btn-ghost" id="btn-next" aria-label="Järgmine küsimus (Next)">
+            <span>Järgmine</span>${SVG_CHEV_R}
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-submit">
+            Esita <span class="btn-sub">(Submit)</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("btn-prev").addEventListener("click", () => goTo(state.current - 1));
+    document.getElementById("btn-next").addEventListener("click", () => goTo(state.current + 1));
+    document.getElementById("btn-submit").addEventListener("click", confirmSubmit);
+    root.querySelectorAll(".pal-btn").forEach((b) => {
+      b.addEventListener("click", () => goTo(parseInt(b.dataset.i, 10)));
+    });
+
+    renderCurrentQuestion();
+    refreshPalette();
+  }
+
+  function renderCurrentQuestion() {
+    const stage = document.getElementById("stage");
+    const q = state.questions[state.current];
+    const chosen = state.answers[q.id];
+
+    const card = document.createElement("article");
+    card.className = "card q-card exam-q";
+    card.dataset.id = q.id;
+    card.innerHTML = `
+      <header class="q-card-head">
+        <span class="q-num">Küsimus ${state.current + 1} / ${state.questions.length}</span>
+        <span class="q-section">Sektsioon ${escapeHtml(q.section || "")}</span>
+      </header>
+      <p class="q-text q-text-et">${escapeHtml(q.question_et)}</p>
+      <p class="q-text q-text-en">${escapeHtml(q.question_en || "")}</p>
+      <ul class="opts" role="radiogroup" aria-label="Vastusevariandid (Answer options)">
+        ${q.options.map((opt, i) => `
+          <li>
+            <button type="button"
+              class="opt-btn ${chosen === i ? "is-chosen" : ""}"
+              data-idx="${i}"
+              role="radio"
+              aria-checked="${chosen === i ? "true" : "false"}">
+              <span class="opt-marker" aria-hidden="true">${String.fromCharCode(65 + i)}</span>
+              <span class="opt-text">${escapeHtml(opt)}</span>
+            </button>
+          </li>
+        `).join("")}
+      </ul>
+    `;
+
+    // Slide-in animation: prep transform then release on next frame.
+    card.style.transform = "translateX(8px)";
+    card.style.opacity = "0";
+    card.style.willChange = "transform, opacity";
+    stage.replaceChildren(card);
+    requestAnimationFrame(() => {
+      card.style.transition = "transform 180ms ease, opacity 180ms ease";
+      card.style.transform = "translateX(0)";
+      card.style.opacity = "1";
+    });
+
+    card.querySelectorAll(".opt-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        state.answers[q.id] = idx;
+        card.querySelectorAll(".opt-btn").forEach((b) => {
+          const on = parseInt(b.dataset.idx, 10) === idx;
+          b.classList.toggle("is-chosen", on);
+          b.setAttribute("aria-checked", String(on));
+        });
+        refreshPalette();
+      });
+    });
+
+    document.getElementById("btn-prev").disabled = state.current === 0;
+    document.getElementById("btn-next").disabled = state.current === state.questions.length - 1;
+  }
+
+  function refreshPalette() {
+    root.querySelectorAll(".pal-btn").forEach((b, i) => {
+      const q = state.questions[i];
+      b.classList.toggle("is-current", i === state.current);
+      b.classList.toggle("is-answered", state.answers[q.id] !== undefined);
+    });
+  }
+
+  function goTo(i) {
+    if (i < 0 || i >= state.questions.length) return;
+    state.current = i;
+    renderCurrentQuestion();
+    refreshPalette();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function startTimer() {
+    const el = document.getElementById("timer");
+    const bar = document.getElementById("timerbar");
+    function tick() {
+      const remaining = Math.max(0, Math.round((state.deadline - Date.now()) / 1000));
+      el.textContent = formatMMSS(remaining);
+      bar.classList.toggle("warn", remaining <= 5 * 60 && remaining > 60);
+      bar.classList.toggle("danger", remaining <= 60);
+      if (remaining <= 0) {
+        clearInterval(state.timer);
+        submitExam(true);
+      }
+    }
+    tick();
+    state.timer = setInterval(tick, 1000);
+  }
+
+  function confirmSubmit() {
+    const answered = Object.keys(state.answers).length;
+    const total = state.questions.length;
+    const missing = total - answered;
+    const msg = missing > 0
+      ? `Vastamata: ${missing}. Kas esitada eksam? (${missing} unanswered. Submit anyway?)`
+      : "Esita eksam? (Submit exam?)";
+    if (confirm(msg)) submitExam(false);
+  }
+
+  async function submitExam(auto) {
+    if (state.submitted) return;
+    state.submitted = true;
+    if (state.timer) clearInterval(state.timer);
+
+    root.innerHTML = `
+      <section class="card exam-grading">
+        <p class="spinner" aria-hidden="true"></p>
+        <p>Hindan vastuseid... (Grading...)</p>
+      </section>
+    `;
+
+    try {
+      const data = await fetchJSON("/api/mock/grade", {
+        method: "POST",
+        body: JSON.stringify({ token: state.token, answers: state.answers }),
+        headers: { "content-type": "application/json" },
+      });
+      renderResult(data, auto);
+    } catch (e) {
+      root.innerHTML = `
+        <section class="card exam-error">
+          <h2>Esitamine ebaõnnestus (Submission failed)</h2>
+          <p>Proovi lehte uuesti laadida. (Please reload the page.)</p>
+        </section>
+      `;
+    }
+  }
+
+  function renderResult(data, auto) {
+    const pass = data.passed;
+    root.innerHTML = `
+      <section class="result">
+        <div class="result-badge ${pass ? "pass" : "fail"}">
+          <span class="result-headline">${pass ? "Sooritatud" : "Mitte sooritatud"}</span>
+          <span class="result-headline-en">${pass ? "Passed" : "Not passed"}</span>
+          <span class="result-score">${data.correct}/${data.total}</span>
+          <span class="result-threshold">Lävend (Pass): ${data.pass_threshold}</span>
+        </div>
+
+        ${auto ? '<p class="muted">Aeg sai läbi, eksam esitati automaatselt. (Time ran out, exam was auto-submitted.)</p>' : ""}
+
+        <h2>Ülevaade (Review)</h2>
+        <ol class="result-list">
+          ${data.results.map((r, i) => renderResultItem(r, i)).join("")}
+        </ol>
+
+        <div class="result-actions">
+          <a class="btn btn-primary" href="/eksam">Tee uus eksam (New exam)</a>
+          <a class="btn btn-ghost" href="/opi">Tagasi õppima (Back to study)</a>
+        </div>
+      </section>
+    `;
+
+    root.querySelectorAll(".explain-btn").forEach((btn) => {
+      btn.addEventListener("click", () => explain(btn));
+    });
+  }
+
+  function renderResultItem(r, i) {
+    const optsHtml = r.options.map((opt, idx) => {
+      const isCorrect = idx === r.correct;
+      const isChosen = idx === r.chosen;
+      let cls = "result-opt";
+      if (isCorrect) cls += " is-correct";
+      if (isChosen && !isCorrect) cls += " is-wrong";
+      let mark = "";
+      if (isCorrect) mark = SVG_CHECK;
+      else if (isChosen) mark = SVG_X;
+      return `
+        <li class="${cls}">
+          <span class="opt-marker">${String.fromCharCode(65 + idx)}</span>
+          <span class="opt-text">${escapeHtml(opt)}</span>
+          <span class="opt-state">${mark}</span>
+        </li>
+      `;
+    }).join("");
+
+    return `
+      <li class="result-item ${r.is_correct ? "ok" : "ko"}" data-id="${r.id}" data-chosen="${r.chosen}">
+        <header class="result-item-head">
+          <span class="q-num">#${i + 1}</span>
+          <span class="result-tag">${r.is_correct ? "Õige (Correct)" : "Vale (Wrong)"}</span>
+        </header>
+        <p class="q-text q-text-et">${escapeHtml(r.question_et)}</p>
+        ${r.question_en ? `<p class="q-text q-text-en">${escapeHtml(r.question_en)}</p>` : ""}
+        <ul class="opts opts-static">${optsHtml}</ul>
+        <p class="q-ref"><strong>Ref.</strong> ${escapeHtml(r.ref || "")}</p>
+        ${r.is_correct ? "" : `
+          <div class="explain-wrap">
+            <button type="button" class="btn btn-ghost explain-btn">
+              Selgita (Explain)
+            </button>
+            <div class="explain-out" hidden></div>
+          </div>
+        `}
+      </li>
+    `;
+  }
+
+  async function explain(btn) {
+    const item = btn.closest(".result-item");
+    const out = item.querySelector(".explain-out");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner spinner-sm" aria-hidden="true"></span> Mõtleb... (Thinking...)';
+    out.hidden = false;
+    out.textContent = "";
+    try {
+      const data = await fetchJSON("/api/tutor", {
+        method: "POST",
+        body: JSON.stringify({
+          question_id: item.dataset.id,
+          chosen_idx: parseInt(item.dataset.chosen, 10),
+          hint_lang: "en",
+        }),
+        headers: { "content-type": "application/json" },
+      });
+      out.textContent = data.answer;
+      out.classList.add("ready");
+      if (data.source === "fallback") {
+        out.classList.add("fallback");
+      }
+      btn.remove();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = "Proovi uuesti (Try again)";
+      out.textContent = "Selgituse laadimine ebaõnnestus. (Failed to load explanation.)";
+    }
+  }
+
+  // Warn before accidental navigation away mid-exam.
+  window.addEventListener("beforeunload", (e) => {
+    if (state.token && !state.submitted) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+
+  renderIntro();
+</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}kodakondsuseksam - tasuta õppevahend{% endblock %}
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-inner">
+    <h1 id="hero-title">
+      Soorita kodakondsuseksam, sinu keeles.
+      <span class="hero-en">Pass the Estonian citizenship exam, in your language.</span>
+    </h1>
+    <p class="hero-lede">
+      {{ question_count }} ametlikku küsimust, kakskeelne kuvamine ja päris eksami formaat.
+      <span class="hero-en">{{ question_count }} official questions, bilingual display, real exam format.</span>
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary btn-lg" href="/opi">
+        <span>Õpi</span>
+        <span class="btn-sub">(Learn)</span>
+      </a>
+      <a class="btn btn-secondary btn-lg" href="/eksam">
+        <span>Eksam</span>
+        <span class="btn-sub">(Mock exam)</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="features" aria-labelledby="features-title">
+  <h2 id="features-title" class="visually-hidden">Mida see vahend pakub (What this tool gives you)</h2>
+  <article class="feature">
+    <div class="feature-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    </div>
+    <h3>Suurem küsimustepank</h3>
+    <p>
+      Üle {{ question_count }} ametliku küsimuse, sektsioonide kaupa.
+      <span class="feature-en">Bigger bank than typical apps, organised by section.</span>
+    </p>
+  </article>
+  <article class="feature">
+    <div class="feature-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 16v-4M12 8h.01"/>
+      </svg>
+    </div>
+    <h3>Vihje sinu keeles</h3>
+    <p>
+      Iga küsimus on saadaval eesti keeles ja inglise keeles, lisaks AI selgitus.
+      <span class="feature-en">Every question in Estonian and English, plus an AI explanation when you get stuck.</span>
+    </p>
+  </article>
+  <article class="feature">
+    <div class="feature-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
+      </svg>
+    </div>
+    <h3>Päris eksami formaat</h3>
+    <p>
+      24 küsimust, 45 minutit, lävend 18. Sama mis riigieksamil.
+      <span class="feature-en">24 questions, 45 minutes, pass at 18. Same as the real state exam.</span>
+    </p>
+  </article>
+</section>
+
+<section class="about-strip">
+  <p>
+    See on tasuta, reklaamivaba ja avatud lähtekoodiga.
+    <span class="about-en">Free, ad-free, open-source.</span>
+    <a href="https://github.com/beekayverma/kodakondsuseksam" rel="noopener noreferrer">
+      Vaata GitHubis (View on GitHub)
+    </a>
+  </p>
+</section>
+{% endblock %}

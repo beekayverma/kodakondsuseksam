@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Õpi - kodakondsuseksam{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Õpi <span class="page-head-en">(Learn)</span></h1>
+  <p class="page-lede">
+    Sirvi küsimusi omas tempos. Vajuta valikut, et näha õiget vastust. Vihje näitab tõlget ja seadust.
+    <span class="page-lede-en">Browse at your own pace. Tap an option to check it. The hint shows the translation and the statute reference.</span>
+  </p>
+</section>
+
+<div id="learn-root" class="learn-list" aria-live="polite">
+  {% for q in questions %}
+  <article
+    class="card q-card q-stub"
+    data-id="{{ q.id }}"
+    data-section="{{ q.section }}"
+    data-answer="{{ q.answer_idx }}"
+    data-ref="{{ q.ref }}"
+    data-question-et="{{ q.question_et|e }}"
+    data-question-en="{{ q.question_en|e }}"
+    data-options='{{ q.options|tojson|e }}'
+    aria-label="Küsimus {{ loop.index }} / {{ questions|length }}"
+  >
+    <header class="q-card-head">
+      <span class="q-num">#{{ loop.index }}</span>
+      <span class="q-section">Sektsioon {{ q.section }}</span>
+    </header>
+    <p class="q-skeleton-line"></p>
+    <p class="q-skeleton-line short"></p>
+  </article>
+  {% endfor %}
+</div>
+
+<script type="module">
+  // Learn mode: virtualised render. We emit lightweight stub cards server-side
+  // (so the page is valid and indexable) and hydrate each card into its full
+  // interactive form only when it enters the viewport. Avoids 66 heavy DOM
+  // subtrees at once on a mid-range Android.
+  const SVG_CHECK = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+  const SVG_X = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  const SVG_INFO = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+
+  function hydrate(card) {
+    if (card.dataset.hydrated === "1") return;
+    card.dataset.hydrated = "1";
+    const id = card.dataset.id;
+    const answerIdx = parseInt(card.dataset.answer, 10);
+    const qEt = card.dataset.questionEt;
+    const qEn = card.dataset.questionEn;
+    const ref = card.dataset.ref;
+    let options;
+    try { options = JSON.parse(card.dataset.options); }
+    catch (e) { options = []; }
+
+    const head = card.querySelector(".q-card-head").outerHTML;
+    const optsHtml = options.map((opt, i) => `
+      <li>
+        <button type="button" class="opt-btn" data-idx="${i}" aria-label="Valik ${i + 1}: ${opt.replace(/"/g, '&quot;')}">
+          <span class="opt-marker" aria-hidden="true">${String.fromCharCode(65 + i)}</span>
+          <span class="opt-text">${escapeHtml(opt)}</span>
+          <span class="opt-state" aria-hidden="true"></span>
+        </button>
+      </li>
+    `).join("");
+
+    card.classList.remove("q-stub");
+    card.innerHTML = `
+      ${head}
+      <p class="q-text q-text-et">${escapeHtml(qEt)}</p>
+      <div class="q-hint" hidden>
+        <p class="q-text-en"><strong>EN.</strong> ${escapeHtml(qEn)}</p>
+        <p class="q-ref"><strong>Ref.</strong> ${escapeHtml(ref)}</p>
+      </div>
+      <ul class="opts">${optsHtml}</ul>
+      <div class="q-actions">
+        <button type="button" class="btn btn-ghost q-hint-toggle" aria-expanded="false">
+          ${SVG_INFO}<span>Vihje (Hint)</span>
+        </button>
+      </div>
+    `;
+
+    const hintBox = card.querySelector(".q-hint");
+    const hintBtn = card.querySelector(".q-hint-toggle");
+    hintBtn.addEventListener("click", () => {
+      const open = !hintBox.hidden;
+      hintBox.hidden = open;
+      hintBtn.setAttribute("aria-expanded", String(!open));
+      if (!open) {
+        // Highlight the correct option as part of revealing the hint.
+        const correctBtn = card.querySelector(`.opt-btn[data-idx="${answerIdx}"]`);
+        if (correctBtn) correctBtn.classList.add("is-correct");
+      }
+    });
+
+    card.querySelectorAll(".opt-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (card.dataset.locked === "1") return;
+        const chosen = parseInt(btn.dataset.idx, 10);
+        const isRight = chosen === answerIdx;
+        card.dataset.locked = "1";
+        btn.classList.add(isRight ? "is-correct" : "is-wrong");
+        btn.querySelector(".opt-state").innerHTML = isRight ? SVG_CHECK : SVG_X;
+        if (!isRight) {
+          const correctBtn = card.querySelector(`.opt-btn[data-idx="${answerIdx}"]`);
+          if (correctBtn) {
+            correctBtn.classList.add("is-correct");
+            correctBtn.querySelector(".opt-state").innerHTML = SVG_CHECK;
+          }
+        } else {
+          card.classList.add("q-celebrate");
+        }
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  const cards = document.querySelectorAll(".q-card");
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          hydrate(e.target);
+          io.unobserve(e.target);
+        }
+      }
+    }, { rootMargin: "400px 0px" });
+    cards.forEach((c) => io.observe(c));
+  } else {
+    // Graceful fallback: just hydrate everything.
+    cards.forEach(hydrate);
+  }
+</script>
+{% endblock %}

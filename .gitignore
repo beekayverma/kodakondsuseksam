@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Env files
+.env
+.env.local
+*.secret
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Runtime state - never commit
+data/
+runtime/
+
+# Node (if frontend grows beyond a static page)
+node_modules/
+.next/
+.nuxt/
+
+# Local overrides
+local.yaml
+local.conf
