@@ -1,8 +1,5 @@
 # Kodakondsuse seadus
 
-Source: Riigi Teataja, https://www.riigiteataja.ee/akt/710566
-Consolidated text. Public-domain Estonian state act.
-
 ## 1. peatükk - Üldsätted
 
 **§ 1. Eesti kodanik**

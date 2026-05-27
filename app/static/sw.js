@@ -5,7 +5,7 @@
 // - offline fallback: cached "/"
 // Bump VERSION on every deploy so old caches are evicted.
 
-const VERSION = "v9-2026-05-27-phone-polish";
+const VERSION = "v12-2026-05-27-mcq-swap-102";
 const STATIC_CACHE = `kodakond-static-${VERSION}`;
 const PAGES_CACHE = `kodakond-pages-${VERSION}`;
 const RUNTIME_CACHE = `kodakond-rt-${VERSION}`;

@@ -23,11 +23,27 @@ STATIC_DIR = ROOT / "app" / "static"
 CORPUS_DIR = ROOT / "corpus"
 
 # Level 0 (Lugemine) catalog: reference documents the real exam candidate
-# is entitled to consult. Order, title, and short description are rendered
-# on the /lugemine index. Files live in corpus/ and are also mirrored into
-# the hp-lab Obsidian vault so the same content powers the Personal Tutor
-# RAG. Source URLs cite Riigi Teataja or Harno verbatim.
+# is entitled to consult. Order matches the recommended pedagogical flow
+# shown to the user: start with the Harno briefing (format, rules), then
+# read the two statutes (Constitution + Citizenship Act), and finally
+# browse the official question bank to see what gets asked. Files live in
+# corpus/ and are also mirrored into the hp-lab Obsidian vault so the
+# same content powers the Personal Tutor RAG. Source URLs cite Riigi
+# Teataja or Harno verbatim.
 LUGEMINE_DOCS: list[dict] = [
+    {
+        "slug": "harno-booklet",
+        "file": "harno-booklet.md",
+        "title": "Harno juhend eksamile kandideerijatele",
+        "title_en": "Harno guide for examinees",
+        "source": "https://harno.ee/sites/default/files/documents/2021-02/Kodakondsuse_eksam_ENG.pdf",
+        "blurb": (
+            "Alusta siit. Ametlik Harno juhend: eksami formaat, hindamine, "
+            "lubatud abivahendid eksamiruumis. (Start here. Official Harno "
+            "briefing: format, grading, what you can bring into the exam "
+            "room.)"
+        ),
+    },
     {
         "slug": "pohiseadus",
         "file": "pohiseadus.md",
@@ -62,18 +78,6 @@ LUGEMINE_DOCS: list[dict] = [
             "103 ametlikku eksamiküsimust nelja jaotuse kaupa. "
             "Päris eksamil genereeritakse iga vooru 24 küsimust just sellest "
             "pangast. (103 official exam questions across four sections.)"
-        ),
-    },
-    {
-        "slug": "harno-booklet",
-        "file": "harno-booklet.txt",
-        "title": "Harno juhend eksamile kandideerijatele",
-        "title_en": "Harno guide for examinees",
-        "source": "https://harno.ee/sites/default/files/documents/2021-02/Kodakondsuse_eksam_ENG.pdf",
-        "blurb": (
-            "Ametlik Harno juhend: eksami formaat, hindamine, lubatud "
-            "abivahendid eksamiruumis. (Official Harno briefing: format, "
-            "grading, what you can bring into the exam room.)"
         ),
     },
 ]

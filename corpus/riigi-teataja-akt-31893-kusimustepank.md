@@ -1,18 +1,15 @@
-# Riigi Teataja Akt 31893 - kodakondsuseksami küsimustepank
+# Eesti Vabariigi põhiseaduse ja kodakondsuse seaduse tundmise eksami küsimused
 
-Source: https://www.riigiteataja.ee/akt/31893
-Allikas: Eesti Vabariigi põhiseaduse ja kodakondsuse seaduse tundmise eksami küsimused
-Vastu võetud Vabariigi Valitsuse määrusega 1995. aastal.
+Vastu võetud Vabariigi Valitsuse määrusega 1995. aastal. Riigi Teataja
+kaudu avaldatud ametlik küsimustik: 103 küsimust nelja jaotuse kaupa.
+Need on lahtised küsimused. Päris eksamil genereeritakse iga vooru jaoks
+24 küsimust nelja vastusevariandiga, mille allikaks on need ametlikud
+küsimused.
 
-Riigiteataja kaudu avaldatud ametlik küsimustik. 103 küsimust nelja jaotuse
-kaupa. Need on lahtised küsimused, mitte mitmevalikulised. Päris eksamil
-genereeritakse iga vooru jaoks 24 küsimust nelja vastusevariandiga, mille
-allikaks on need ametlikud küsimused.
-
-These are open-form questions from the official Riigi Teataja act. The
-real exam wraps each into a 4-option multiple-choice format with distractors.
-Future work: convert each of these into our MCQ schema (id, options,
-answer_idx, ref) for inclusion in the bank with human/legal review.
+These are the official 103 open-form questions of the Estonian
+Constitution and Citizenship Act knowledge exam, established by
+Government regulation in 1995 and published via Riigi Teataja. The real
+exam draws each round of 24 multiple-choice questions from this bank.
 
 ## I. Riigikorra põhialused (Constitution Ch I + III, state structure)
 
