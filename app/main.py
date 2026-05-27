@@ -260,6 +260,27 @@ class TutorRequest(BaseModel):
     hint_lang: str = Field(default="en", min_length=2, max_length=5)
 
 
+def _clean_rag_answer(text: str) -> str:
+    """Strip the RAG response's debug scaffolding before showing it to the
+    end user: the leading 'Q: ...' prompt echo (the RAG repeats our prompt
+    back at the top of its reply) and the trailing 'Retrieved chunks:'
+    citation block (file paths and distance scores aren't user-relevant).
+    Idempotent on already-clean responses."""
+    if not text:
+        return text
+    s = text.strip()
+    if s.startswith("Q:"):
+        parts = s.split("\n\n", 1)
+        if len(parts) == 2:
+            s = parts[1]
+    for marker in ("\n---\nRetrieved chunks:", "\n\nRetrieved chunks:", "\nRetrieved chunks:"):
+        idx = s.find(marker)
+        if idx >= 0:
+            s = s[:idx]
+            break
+    return s.strip()
+
+
 @app.post("/api/tutor")
 async def tutor(payload: TutorRequest) -> JSONResponse:
     q = QUESTIONS_BY_ID.get(payload.question_id)
@@ -284,7 +305,7 @@ async def tutor(payload: TutorRequest) -> JSONResponse:
             resp = await client.post(RAG_URL, json={"question": prompt})
         resp.raise_for_status()
         data = resp.json()
-        answer = data.get("answer") or data.get("response") or ""
+        answer = _clean_rag_answer(data.get("answer") or data.get("response") or "")
         if not answer.strip():
             raise ValueError("empty answer from RAG")
         return JSONResponse(
