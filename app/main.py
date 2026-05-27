@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import re
 import secrets
 from pathlib import Path
 
@@ -260,11 +261,16 @@ class TutorRequest(BaseModel):
     hint_lang: str = Field(default="en", min_length=2, max_length=5)
 
 
+_CHUNK_REF_RE = re.compile(r"\s*\[chunk:\s*\d+(?:\s*[,\s]\s*\d+)*\]\s*")
+_MULTISPACE_RE = re.compile(r"[ \t]{2,}")
+
+
 def _clean_rag_answer(text: str) -> str:
     """Strip the RAG response's debug scaffolding before showing it to the
-    end user: the leading 'Q: ...' prompt echo (the RAG repeats our prompt
-    back at the top of its reply) and the trailing 'Retrieved chunks:'
-    citation block (file paths and distance scores aren't user-relevant).
+    end user: the leading 'Q: ...' prompt echo, the trailing 'Retrieved
+    chunks:' citation block, AND any inline '[chunk:N]' / '[chunk:N,M]'
+    references the model sprinkles into the answer body (per-sentence
+    citations that read awkwardly when surfaced as user-facing prose).
     Idempotent on already-clean responses."""
     if not text:
         return text
@@ -278,6 +284,14 @@ def _clean_rag_answer(text: str) -> str:
         if idx >= 0:
             s = s[:idx]
             break
+    # Drop inline "[chunk:N]" or "[chunk:N,M,K]" references. Capture
+    # surrounding whitespace so removal does not leave double spaces or a
+    # space before punctuation.
+    s = _CHUNK_REF_RE.sub(" ", s)
+    s = _MULTISPACE_RE.sub(" ", s)
+    # Tidy " ," " ." etc that may appear after the substitution.
+    for bad, good in ((" ,", ","), (" .", "."), (" ;", ";"), (" :", ":"), (" )", ")"), ("( ", "(")):
+        s = s.replace(bad, good)
     return s.strip()
 
 
